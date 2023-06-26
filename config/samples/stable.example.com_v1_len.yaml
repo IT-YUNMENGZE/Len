@@ -1,0 +1,7 @@
+apiVersion: stable.example.com.my.domain/v1
+kind: Len
+metadata:
+  name: len-sample
+spec:
+  # Add fields here
+  foo: bar

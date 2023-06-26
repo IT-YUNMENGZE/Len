@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: len
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: len-cr
+rules:
+  - apiGroups:
+      - "stable.example.com.my.domain"
+    resources:
+      - lens
+    verbs:
+      - delete
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - delete
+      - get
+      - list
+      - watch
+      - update
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: len-sa
+  namespace: len
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: len-crb
+  namespace: len
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: len-cr
+subjects:
+  - kind: ServiceAccount
+    name: len-sa
+    namespace: len
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: len
+  namespace: len
+  labels:
+    app: len
+spec:
+  selector:
+    matchLabels:
+      app: len
+  template:
+    metadata:
+      labels:
+        app: len
+    spec:
+      serviceAccountName: len-sa
+      containers:
+        - name: len
+          image: registry.cn-guangzhou.aliyuncs.com/yunmengze/len:4.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            limits:
+              cpu: 200m
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            - name: nfs
+              mountPath: "/root"
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: nfs
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Mi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.1.128
+    path: "/share/nfs/network_topology"
+  claimRef:
+    name: nfs
+    namespace: len
+  persistentVolumeReclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs
+  namespace: len
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi

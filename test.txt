@@ -1,0 +1,4 @@
+gateway master,1 node2,1 node1,1
+master gateway,1 node2,2
+node1 gateway,1 node2,6
+node2 master,2 node1,6 gateway,1

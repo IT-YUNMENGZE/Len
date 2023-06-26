@@ -1,0 +1,15 @@
+domain: my.domain
+layout:
+- go.kubebuilder.io/v3
+projectName: len
+repo: my.domain/Len
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: my.domain
+  group: stable.example.com
+  kind: Len
+  path: my.domain/Len/api/v1
+  version: v1
+version: "3"
